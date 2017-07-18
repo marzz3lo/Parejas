@@ -40,6 +40,9 @@ public class Menu extends Activity implements GoogleApiClient.ConnectionCallback
     private Button btnPartidaPorTurnos;
     private Button btnMarcadores;
     final static int REQUEST_LEADERBOARD = 100;
+    private Button btnLogros;
+    final static int REQUEST_ACHIEVEMENTS = 101;
+
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -62,6 +65,7 @@ public class Menu extends Activity implements GoogleApiClient.ConnectionCallback
         btnInvitar = (Button) findViewById(R.id.btnInvitar);
         btnPartidaPorTurnos = (Button) findViewById(R.id.btnPartidaPorTurnos);
         btnMarcadores = (Button) findViewById(R.id.btnMarcadores);
+        btnLogros = (Button) findViewById(R.id.btnLogros);
     }
 
     public void btnJugar_Click(View v) {
@@ -217,5 +221,9 @@ public class Menu extends Activity implements GoogleApiClient.ConnectionCallback
 
     public void btnMarcadores_Click(View v) {
         startActivityForResult(Games.Leaderboards.getLeaderboardIntent(Partida.mGoogleApiClient, getString(R.string.marcador_tiempoReal_id)), REQUEST_LEADERBOARD);
+    }
+
+    public void btnLogros_Click(View v) {
+        startActivityForResult(Games.Achievements.getAchievementsIntent(Partida.mGoogleApiClient), REQUEST_ACHIEVEMENTS);
     }
 }
