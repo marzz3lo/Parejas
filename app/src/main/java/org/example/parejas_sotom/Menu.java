@@ -11,6 +11,11 @@ import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.drive.Drive;
 import com.google.android.gms.games.Games;
+import com.google.android.gms.games.multiplayer.Invitation;
+import com.google.android.gms.games.multiplayer.Multiplayer;
+import com.google.android.gms.games.multiplayer.OnInvitationReceivedListener;
+import com.google.android.gms.games.multiplayer.realtime.RoomConfig;
+import com.google.android.gms.games.multiplayer.turnbased.TurnBasedMatchConfig;
 
 import java.util.ArrayList;
 import java.util.Random;
@@ -19,7 +24,7 @@ import java.util.Random;
  * Created by marzzelo on 18/7/2017.
  */
 
-public class Menu extends Activity implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
+public class Menu extends Activity implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, OnInvitationReceivedListener {
     private Button btnJugar;
     private static final int RC_SIGN_IN = 9001;
     private boolean mResolvingConnectionFailure = false;
@@ -29,6 +34,9 @@ public class Menu extends Activity implements GoogleApiClient.ConnectionCallback
     private Button btnDesconectar;
     private Button btnPartidasGuardadas;
     private Button btnPartidaEnTiempoReal;
+    String mIncomingInvitationId = null;
+    final static int RC_SELECT_PLAYERS = 10000;
+    private Button btnInvitar;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -48,6 +56,7 @@ public class Menu extends Activity implements GoogleApiClient.ConnectionCallback
 
         btnPartidasGuardadas = (Button) findViewById(R.id.btnPartidasGuardadas);
         btnPartidaEnTiempoReal = (Button) findViewById(R.id.btnPartidaEnTiempoReal);
+        btnInvitar = (Button) findViewById(R.id.btnInvitar);
     }
 
     public void btnJugar_Click(View v) {
@@ -142,6 +151,22 @@ public class Menu extends Activity implements GoogleApiClient.ConnectionCallback
                     BaseGameUtils.showActivityResultError(this, requestCode, responseCode, R.string.unknown_error);
                 }
                 break;
+            case RC_SELECT_PLAYERS:
+                if (responseCode != Activity.RESULT_OK) {
+                    return;
+                }
+                final ArrayList<String> invitees = intent.getStringArrayListExtra(Games.EXTRA_PLAYER_IDS);
+                Bundle autoMatchCriteria = null;
+                int minAutoMatchPlayers = intent.getIntExtra(Multiplayer.EXTRA_MIN_AUTOMATCH_PLAYERS, 0);
+                int maxAutoMatchPlayers = intent.getIntExtra(Multiplayer.EXTRA_MAX_AUTOMATCH_PLAYERS, 0);
+                if (minAutoMatchPlayers > 0) {
+                    autoMatchCriteria = RoomConfig.createAutoMatchCriteria(minAutoMatchPlayers, maxAutoMatchPlayers, 0);
+                } else {
+                    autoMatchCriteria = null;
+                }
+                TurnBasedMatchConfig tbmc = TurnBasedMatchConfig.builder().addInvitedPlayers(invitees).setAutoMatchCriteria(autoMatchCriteria).build();
+                Games.TurnBasedMultiplayer.createMatch(Partida.mGoogleApiClient, tbmc);
+                break;
         }
         super.onActivityResult(requestCode, responseCode, intent);
     }
@@ -158,5 +183,23 @@ public class Menu extends Activity implements GoogleApiClient.ConnectionCallback
         nuevoJuego(4, 4);
         Intent intent = new Intent(this, Juego.class);
         startActivity(intent);
+    }
+
+    @Override
+    public void onInvitationReceived(Invitation invitation) {
+        mIncomingInvitationId = invitation.getInvitationId();
+    }
+
+    @Override
+    public void onInvitationRemoved(String invitationId) {
+        if (mIncomingInvitationId.equals(invitationId) && mIncomingInvitationId != null) {
+            mIncomingInvitationId = null;
+        }
+    }
+
+    public void btnInvitar_Click(View v) {
+        final int NUMERO_MINIMO_OPONENTES = 1, NUMERO_MAXIMO_OPONENTES = 1;
+        Intent intent = Games.TurnBasedMultiplayer.getSelectOpponentsIntent(Partida.mGoogleApiClient, NUMERO_MINIMO_OPONENTES, NUMERO_MAXIMO_OPONENTES, true);
+        startActivityForResult(intent, RC_SELECT_PLAYERS);
     }
 }
