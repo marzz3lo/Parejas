@@ -2,5 +2,9 @@
 <resources>
     <string name="app_id">871546277032</string>
     <string name="marcador_tiempoReal_id">CgkIqJnT4a4ZEAIQAQ</string>
-
+    <string name="logro_invitar">CgkIqJnT4a4ZEAIQAg</string>
+    <string name="logro_tiempoReal">CgkIqJnT4a4ZEAIQAw</string>
+    <string name="evento_offline">CgkIqJnT4a4ZEAIQBA</string>
+    <string name="evento_tiempoReal">CgkIqJnT4a4ZEAIQBQ</string>
+    <string name="evento_porTurnos">CgkIqJnT4a4ZEAIQBg</string>
 </resources>

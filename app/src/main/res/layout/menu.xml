@@ -64,4 +64,11 @@
         android:layout_height="wrap_content"
         android:onClick="btnLogros_Click"
         android:text="Logros"/>
+
+    <Button
+        android:id="@+id/btnMisiones"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:onClick="btnMisiones_Click"
+        android:text="Misiones"/>
 </LinearLayout>
