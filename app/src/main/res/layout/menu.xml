@@ -43,4 +43,11 @@
         android:layout_height="wrap_content"
         android:onClick="btnInvitar_Click"
         android:text="Invitar"/>
+
+    <Button
+        android:id="@+id/btnPartidaPorTurnos"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:onClick="btnPartidaPorTurnos_Click"
+        android:text="Partida por turnos"/>
 </LinearLayout>

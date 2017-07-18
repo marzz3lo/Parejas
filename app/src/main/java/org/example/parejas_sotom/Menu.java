@@ -37,6 +37,8 @@ public class Menu extends Activity implements GoogleApiClient.ConnectionCallback
     String mIncomingInvitationId = null;
     final static int RC_SELECT_PLAYERS = 10000;
     private Button btnInvitar;
+    private Button btnPartidaPorTurnos;
+
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -57,6 +59,7 @@ public class Menu extends Activity implements GoogleApiClient.ConnectionCallback
         btnPartidasGuardadas = (Button) findViewById(R.id.btnPartidasGuardadas);
         btnPartidaEnTiempoReal = (Button) findViewById(R.id.btnPartidaEnTiempoReal);
         btnInvitar = (Button) findViewById(R.id.btnInvitar);
+        btnPartidaPorTurnos = (Button) findViewById(R.id.btnPartidaPorTurnos);
     }
 
     public void btnJugar_Click(View v) {
@@ -201,5 +204,12 @@ public class Menu extends Activity implements GoogleApiClient.ConnectionCallback
         final int NUMERO_MINIMO_OPONENTES = 1, NUMERO_MAXIMO_OPONENTES = 1;
         Intent intent = Games.TurnBasedMultiplayer.getSelectOpponentsIntent(Partida.mGoogleApiClient, NUMERO_MINIMO_OPONENTES, NUMERO_MAXIMO_OPONENTES, true);
         startActivityForResult(intent, RC_SELECT_PLAYERS);
+    }
+
+    public void btnPartidaPorTurnos_Click(View v) {
+        Partida.tipoPartida = "TURNO";
+        nuevoJuego(4, 4);
+        Intent intent = new Intent(this, Juego.class);
+        startActivity(intent);
     }
 }
