@@ -12,6 +12,9 @@ import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.PendingResult;
+import com.google.android.gms.common.api.ResultCallback;
+import com.google.android.gms.common.api.Status;
 import com.google.android.gms.drive.Drive;
 import com.google.android.gms.games.Games;
 import com.google.android.gms.games.multiplayer.Invitation;
@@ -22,6 +25,8 @@ import com.google.android.gms.games.multiplayer.turnbased.TurnBasedMatchConfig;
 import com.google.android.gms.games.quest.Quests;
 import com.google.android.gms.games.request.GameRequest;
 import com.google.android.gms.games.request.OnRequestReceivedListener;
+import com.google.android.gms.games.stats.PlayerStats;
+import com.google.android.gms.games.stats.Stats;
 
 import java.util.ArrayList;
 import java.util.Random;
@@ -125,6 +130,7 @@ public class Menu extends Activity implements GoogleApiClient.ConnectionCallback
         findViewById(R.id.sign_in_button).setVisibility(View.GONE);
         findViewById(R.id.sign_out_button).setVisibility(View.VISIBLE);
         Games.Requests.registerRequestListener(mGoogleApiClient, mRequestListener);
+        estadisticasJugador();
     }
 
     @Override
@@ -278,4 +284,31 @@ public class Menu extends Activity implements GoogleApiClient.ConnectionCallback
         public void onRequestRemoved(String requestId) {
         }
     };
+
+    public void estadisticasJugador() {
+        PendingResult<Stats.LoadPlayerStatsResult> result = Games.Stats.loadPlayerStats(Partida.mGoogleApiClient, false);
+        result.setResultCallback(new ResultCallback<Stats.LoadPlayerStatsResult>() {
+            public void onResult(Stats.LoadPlayerStatsResult result) {
+                Status status = result.getStatus();
+                if (status.isSuccess()) {
+                    PlayerStats stats = result.getPlayerStats();
+                    if (stats != null) {
+                        Toast.makeText(getApplicationContext(), "Estadísticas del jugador cargadas", Toast.LENGTH_LONG).show();
+                        if (stats.getDaysSinceLastPlayed() > 7) {
+                            Toast.makeText(getApplicationContext(), "Ya te hechabamos de menos...", Toast.LENGTH_LONG).show();
+                        } else {
+                            Toast.makeText(getApplicationContext(), "Bienvenido!!", Toast.LENGTH_LONG).show();
+                        }
+                        if (stats.getNumberOfSessions() > 100) {
+                            Toast.makeText(getApplicationContext(), "Ya eres un jugador experto", Toast.LENGTH_LONG).show();
+                        } else {
+                            Toast.makeText(getApplicationContext(), "Practica y ejercitarás la mente.", Toast.LENGTH_LONG).show();
+                        }
+                    }
+                } else {
+                    Toast.makeText(getApplicationContext(), "Error…", Toast.LENGTH_LONG).show();
+                }
+            }
+        });
+    }
 }
