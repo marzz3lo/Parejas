@@ -29,4 +29,11 @@
         android:layout_height="wrap_content"
         android:onClick="btnPartidasGuardadas_Click"
         android:text="Partidas guardadas"/>
+
+    <Button
+        android:id="@+id/btnPartidaEnTiempoReal"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:onClick="btnPartidaEnTiempoReal_Click"
+        android:text="Partida en Tiempo Real"/>
 </LinearLayout>
