@@ -129,6 +129,15 @@ public class Juego extends Activity implements RoomStatusUpdateListener, RoomUpd
                     Partida.puntosJ2 += 2;
                 }
                 if ((Partida.puntosJ1 + Partida.puntosJ2) == (Partida.FILAS * Partida.COLUMNAS)) { //FIN JUEGO
+                    if (Partida.tipoPartida == "REAL") {
+                        int puntos;
+                        if (jugadorLocal == 1) {
+                            puntos = Partida.puntosJ1;
+                        } else {
+                            puntos = Partida.puntosJ2;
+                        }
+                        Games.Leaderboards.submitScore(Partida.mGoogleApiClient, getString(R.string.marcador_tiempoReal_id), puntos);
+                    }
                     ((TextView) findViewById(R.id.jugador)).setText("GANADOR JUGADOR " + (Partida.turno) + "");
                     if (Partida.tipoPartida == "TURNO") {
                         mTurnData.puntosJ1 = Partida.puntosJ1;
@@ -139,6 +148,7 @@ public class Juego extends Activity implements RoomStatusUpdateListener, RoomUpd
                         Toast.makeText(getApplicationContext(), "Fin de la partida.", Toast.LENGTH_LONG).show();
                         mTurnData = null;
                     }
+
                 }
             } else { //FALLO
                 segundaCasilla.boton.setBackgroundDrawable(imagenOculta);
