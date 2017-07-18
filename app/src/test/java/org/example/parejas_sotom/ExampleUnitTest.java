@@ -1,4 +1,4 @@
-package org.example.parejas;
+package org.example.parejas_sotom;
 
 import org.junit.Test;
 

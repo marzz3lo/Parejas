@@ -1,4 +1,4 @@
-package org.example.parejas;
+package org.example.parejas_sotom;
 
 /**
  * Created by marzzelo on 18/7/2017.

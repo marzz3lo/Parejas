@@ -1,4 +1,4 @@
-package org.example.parejas;
+package org.example.parejas_sotom;
 
 import android.content.Context;
 import android.support.test.InstrumentationRegistry;
