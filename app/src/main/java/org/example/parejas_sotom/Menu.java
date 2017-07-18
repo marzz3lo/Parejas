@@ -3,9 +3,12 @@ package org.example.parejas_sotom;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
+import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -17,9 +20,13 @@ import com.google.android.gms.games.multiplayer.OnInvitationReceivedListener;
 import com.google.android.gms.games.multiplayer.realtime.RoomConfig;
 import com.google.android.gms.games.multiplayer.turnbased.TurnBasedMatchConfig;
 import com.google.android.gms.games.quest.Quests;
+import com.google.android.gms.games.request.GameRequest;
+import com.google.android.gms.games.request.OnRequestReceivedListener;
 
 import java.util.ArrayList;
 import java.util.Random;
+
+import static org.example.parejas_sotom.Partida.mGoogleApiClient;
 
 /**
  * Created by marzzelo on 18/7/2017.
@@ -45,6 +52,9 @@ public class Menu extends Activity implements GoogleApiClient.ConnectionCallback
     final static int REQUEST_ACHIEVEMENTS = 101;
     private Button btnMisiones;
     final static int REQUEST_QUESTS = 102;
+    private Button btnRegalos;
+    final static int SEND_GIFT_QUESTS = 103;
+    private static final int DEFAULT_LIFETIME = 7;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -55,11 +65,11 @@ public class Menu extends Activity implements GoogleApiClient.ConnectionCallback
         btnConectar.setOnClickListener(btnConectar_Click);
         btnDesconectar = (Button) findViewById(R.id.sign_out_button);
         btnDesconectar.setOnClickListener(btnDesconectar_Click);
-        Partida.mGoogleApiClient = new GoogleApiClient.Builder(this).addConnectionCallbacks(this).addOnConnectionFailedListener(this).addApi(Games.API).addScope(Games.SCOPE_GAMES).addApi(Drive.API).addScope(Drive.SCOPE_APPFOLDER).build();
+        mGoogleApiClient = new GoogleApiClient.Builder(this).addConnectionCallbacks(this).addOnConnectionFailedListener(this).addApi(Games.API).addScope(Games.SCOPE_GAMES).addApi(Drive.API).addScope(Drive.SCOPE_APPFOLDER).build();
         SharedPreferences prefs = getSharedPreferences("Parejas", MODE_PRIVATE);
         int conectado = prefs.getInt("conectado", 0);
         if (conectado != 0) {
-            Partida.mGoogleApiClient.connect();
+            mGoogleApiClient.connect();
         }
 
         btnPartidasGuardadas = (Button) findViewById(R.id.btnPartidasGuardadas);
@@ -69,6 +79,7 @@ public class Menu extends Activity implements GoogleApiClient.ConnectionCallback
         btnMarcadores = (Button) findViewById(R.id.btnMarcadores);
         btnLogros = (Button) findViewById(R.id.btnLogros);
         btnMisiones = (Button) findViewById(R.id.btnMisiones);
+        btnRegalos = (Button) findViewById(R.id.btnRegalos);
     }
 
     public void btnJugar_Click(View v) {
@@ -76,7 +87,7 @@ public class Menu extends Activity implements GoogleApiClient.ConnectionCallback
         nuevoJuego(4, 4);
         Intent intent = new Intent(this, Juego.class);
         startActivity(intent);
-        Games.Events.increment(Partida.mGoogleApiClient, getString(R.string.evento_offline), 1);
+        Games.Events.increment(mGoogleApiClient, getString(R.string.evento_offline), 1);
     }
 
     private void nuevoJuego(int col, int fil) {
@@ -106,13 +117,14 @@ public class Menu extends Activity implements GoogleApiClient.ConnectionCallback
 
     @Override
     public void onConnectionSuspended(int i) {
-        Partida.mGoogleApiClient.connect();
+        mGoogleApiClient.connect();
     }
 
     @Override
     public void onConnected(Bundle connectionHint) {
         findViewById(R.id.sign_in_button).setVisibility(View.GONE);
         findViewById(R.id.sign_out_button).setVisibility(View.VISIBLE);
+        Games.Requests.registerRequestListener(mGoogleApiClient, mRequestListener);
     }
 
     @Override
@@ -123,7 +135,7 @@ public class Menu extends Activity implements GoogleApiClient.ConnectionCallback
         if (mSignInClicked) {
             mSignInClicked = false;
             mResolvingConnectionFailure = true;
-            if (!BaseGameUtils.resolveConnectionFailure(this, Partida.mGoogleApiClient, connectionResult, RC_SIGN_IN, "Hubo un error al conectar, por favor, inténtalo más tarde.")) {
+            if (!BaseGameUtils.resolveConnectionFailure(this, mGoogleApiClient, connectionResult, RC_SIGN_IN, "Hubo un error al conectar, por favor, inténtalo más tarde.")) {
                 mResolvingConnectionFailure = false;
             }
         }
@@ -132,14 +144,14 @@ public class Menu extends Activity implements GoogleApiClient.ConnectionCallback
     View.OnClickListener btnConectar_Click = new View.OnClickListener() {
         public void onClick(View v) {
             mSignInClicked = true;
-            Partida.mGoogleApiClient.connect();
+            mGoogleApiClient.connect();
         }
     };
 
     View.OnClickListener btnDesconectar_Click = new View.OnClickListener() {
         public void onClick(View v) {
             mSignInClicked = false;
-            Games.signOut(Partida.mGoogleApiClient);
+            Games.signOut(mGoogleApiClient);
             findViewById(R.id.sign_in_button).setVisibility(View.VISIBLE);
             findViewById(R.id.sign_out_button).setVisibility(View.GONE);
             SharedPreferences.Editor editor = getSharedPreferences("Parejas", MODE_PRIVATE).edit();
@@ -156,7 +168,7 @@ public class Menu extends Activity implements GoogleApiClient.ConnectionCallback
                 mSignInClicked = false;
                 mResolvingConnectionFailure = false;
                 if (responseCode == RESULT_OK) {
-                    Partida.mGoogleApiClient.connect();
+                    mGoogleApiClient.connect();
                     SharedPreferences.Editor editor = getSharedPreferences("Parejas", MODE_PRIVATE).edit();
                     editor.putInt("conectado", 1);
                     editor.commit();
@@ -178,7 +190,7 @@ public class Menu extends Activity implements GoogleApiClient.ConnectionCallback
                     autoMatchCriteria = null;
                 }
                 TurnBasedMatchConfig tbmc = TurnBasedMatchConfig.builder().addInvitedPlayers(invitees).setAutoMatchCriteria(autoMatchCriteria).build();
-                Games.TurnBasedMultiplayer.createMatch(Partida.mGoogleApiClient, tbmc);
+                Games.TurnBasedMultiplayer.createMatch(mGoogleApiClient, tbmc);
                 break;
         }
         super.onActivityResult(requestCode, responseCode, intent);
@@ -196,8 +208,8 @@ public class Menu extends Activity implements GoogleApiClient.ConnectionCallback
         nuevoJuego(4, 4);
         Intent intent = new Intent(this, Juego.class);
         startActivity(intent);
-        Games.Achievements.increment(Partida.mGoogleApiClient, getString(R.string.logro_tiempoReal), 1);
-        Games.Events.increment(Partida.mGoogleApiClient, getString(R.string.evento_tiempoReal), 1);
+        Games.Achievements.increment(mGoogleApiClient, getString(R.string.logro_tiempoReal), 1);
+        Games.Events.increment(mGoogleApiClient, getString(R.string.evento_tiempoReal), 1);
     }
 
     @Override
@@ -214,9 +226,9 @@ public class Menu extends Activity implements GoogleApiClient.ConnectionCallback
 
     public void btnInvitar_Click(View v) {
         final int NUMERO_MINIMO_OPONENTES = 1, NUMERO_MAXIMO_OPONENTES = 1;
-        Intent intent = Games.TurnBasedMultiplayer.getSelectOpponentsIntent(Partida.mGoogleApiClient, NUMERO_MINIMO_OPONENTES, NUMERO_MAXIMO_OPONENTES, true);
+        Intent intent = Games.TurnBasedMultiplayer.getSelectOpponentsIntent(mGoogleApiClient, NUMERO_MINIMO_OPONENTES, NUMERO_MAXIMO_OPONENTES, true);
         startActivityForResult(intent, RC_SELECT_PLAYERS);
-        Games.Achievements.unlock(Partida.mGoogleApiClient, getString(R.string.logro_invitar));
+        Games.Achievements.unlock(mGoogleApiClient, getString(R.string.logro_invitar));
     }
 
     public void btnPartidaPorTurnos_Click(View v) {
@@ -224,19 +236,46 @@ public class Menu extends Activity implements GoogleApiClient.ConnectionCallback
         nuevoJuego(4, 4);
         Intent intent = new Intent(this, Juego.class);
         startActivity(intent);
-        Games.Events.increment(Partida.mGoogleApiClient, getString(R.string.evento_porTurnos), 1);
+        Games.Events.increment(mGoogleApiClient, getString(R.string.evento_porTurnos), 1);
     }
 
     public void btnMarcadores_Click(View v) {
-        startActivityForResult(Games.Leaderboards.getLeaderboardIntent(Partida.mGoogleApiClient, getString(R.string.marcador_tiempoReal_id)), REQUEST_LEADERBOARD);
+        startActivityForResult(Games.Leaderboards.getLeaderboardIntent(mGoogleApiClient, getString(R.string.marcador_tiempoReal_id)), REQUEST_LEADERBOARD);
     }
 
     public void btnLogros_Click(View v) {
-        startActivityForResult(Games.Achievements.getAchievementsIntent(Partida.mGoogleApiClient), REQUEST_ACHIEVEMENTS);
+        startActivityForResult(Games.Achievements.getAchievementsIntent(mGoogleApiClient), REQUEST_ACHIEVEMENTS);
     }
 
     public void btnMisiones_Click(View v) {
-        startActivityForResult(Games.Quests.getQuestsIntent(Partida.mGoogleApiClient, Quests.SELECT_ALL_QUESTS), REQUEST_QUESTS);
+        startActivityForResult(Games.Quests.getQuestsIntent(mGoogleApiClient, Quests.SELECT_ALL_QUESTS), REQUEST_QUESTS);
     }
 
+    public void btnRegalos_Click(View v) {
+        Bitmap mGiftIcon;
+        mGiftIcon = BitmapFactory.decodeResource(getResources(), R.drawable.ic_send_gift);
+        startActivityForResult(Games.Requests.getSendIntent(mGoogleApiClient, GameRequest.TYPE_GIFT, "".getBytes(), DEFAULT_LIFETIME, mGiftIcon, "Esto es un regalo"), REQUEST_QUESTS);
+    }
+
+    private OnRequestReceivedListener mRequestListener = new OnRequestReceivedListener() {
+        @Override
+        public void onRequestReceived(GameRequest request) {
+            String requestStringResource;
+            switch (request.getType()) {
+                case GameRequest.TYPE_GIFT:
+                    requestStringResource = "Has recibido un regalo...";
+                    break;
+                case GameRequest.TYPE_WISH:
+                    requestStringResource = "Has recibido un deseo...";
+                    break;
+                default:
+                    return;
+            }
+            Toast.makeText(Menu.this, requestStringResource, Toast.LENGTH_LONG).show();
+        }
+
+        @Override
+        public void onRequestRemoved(String requestId) {
+        }
+    };
 }
